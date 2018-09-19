@@ -3,7 +3,7 @@
 
 #include "../common/type.h"
 
-struct lf_modules{
+struct lf_core_modules{
 	u32 cModuleID;
 	s16 name;
 	u32 (*initModule)();
