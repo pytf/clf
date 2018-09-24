@@ -7,10 +7,9 @@
 struct lf_modules{
 =======
 struct lf_core_modules{
->>>>>>> 9b0810c277871c89d15248e3d0abf25a73eb543d
-	u32 cModuleID;
-	s16 name;
-	u32 (*initModule)();
+    u32 cModuleID;
+    s16 name;
+    u32 (*initModule)();
 }
 
 #endif

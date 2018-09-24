@@ -36,26 +36,26 @@ lf_daemon(lf_log_t *log)
     }
     //设置进程的文件权限掩码为0
     umask(0);
-	
+    
     fd = open("/dev/null", O_RDWR);
     if (fd == -1) {
         lf_log_error(lf_LOG_EMERG, log, lf_errno,
                       "open(\"/dev/null\") failed");
         return lf_ERROR;
     }
-	//重定向标准输入到/dev/null
+    //重定向标准输入到/dev/null
     if (dup2(fd, STDIN_FILENO) == -1) {
         lf_log_error(lf_LOG_EMERG, log, lf_errno, "dup2(STDIN) failed");
         return lf_ERROR;
     }
-	//重定向标准输出到/dev/null
+    //重定向标准输出到/dev/null
     if (dup2(fd, STDOUT_FILENO) == -1) {
         lf_log_error(lf_LOG_EMERG, log, lf_errno, "dup2(STDOUT) failed");
         return lf_ERROR;
     }
 
 #if 0
-	//重定向标准出错到/dev/null
+    //重定向标准出错到/dev/null
     if (dup2(fd, STDERR_FILENO) == -1) {
         lf_log_error(lf_LOG_EMERG, log, lf_errno, "dup2(STDERR) failed");
         return lf_ERROR;
