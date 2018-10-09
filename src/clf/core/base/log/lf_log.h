@@ -4,11 +4,12 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 #include <stdarg.h> /* for va_list */
 #include <stdio.h> /* for size_t */
 #include <syslog.h> /* for syslog */
+#include "type.h"
 
 #define MAX_HEAD_SIZE       16
 #define MAX_MSG_SIZE        65536 * 6
@@ -37,33 +38,29 @@ typedef enum {
 } lf_log_cache;
 
 
-//ÈÕÖ¾Àà¶ÁĞ´Ëø
+//æ—¥å¿—ç±»è¯»å†™é”
 static pthread_rwlock_t lf_log_env_lock = PTHREAD_RWLOCK_INITIALIZER;
-//ÈÕÖ¾ÎÄ¼şÃû
+//æ—¥å¿—æ–‡ä»¶å
 static s8* lf_strFileName;
-//ÈÕÖ¾ÎÄ¼şÂ·¾¶
+//æ—¥å¿—æ–‡ä»¶è·¯å¾„
 static s8* lf_strFilePath;
-//ÈÕÖ¾×î´ó´óĞ¡
+//æ—¥å¿—æœ€å¤§å¤§å°
 static u32 lf_iMaxSize;
-//ÈÕÖ¾µ±Ç°¼¶±ğ
+//æ—¥å¿—å½“å‰çº§åˆ«
 static u32 lf_curLogLevel;
-//ÈÕÖ¾¸öÊı
+//æ—¥å¿—ä¸ªæ•°
 static u32 lf_iLogCount;
 
-#define lf_log_std(level, ...) \
-    lf_log(level, __FILE__, sizeof(__FILE__)-1, __FUNCTION__, sizeof(__func__)-1, __LINE__, __VA_ARGS__)
+#define lf_log_std(level, iFormat, ...) \
+    lf_log(level, __FILE__, __FUNCTION__, __LINE__, iFormat, __VA_ARGS__)
 
 int lf_log_init(const char *confpath);
 
-void lf_log(lf_log_category_t * category,
-    const char *file, size_t filelen,
-    const char *func, size_t funclen,
-    long line, int level,
-    const char *format, ...);
+void lf_log(const int level, const char *file, const char *func, long line, const char *format, ...);
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif
+#endif /* _LF_LOG_H_ */
 
