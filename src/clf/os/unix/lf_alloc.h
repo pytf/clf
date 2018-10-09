@@ -9,9 +9,7 @@
 #define _lf_ALLOC_H_INCLUDED_
 
 
-#include <lf_config.h>
-#include <lf_core.h>
-
+#include ＂lf_log.h＂
 
 void *lf_alloc(size_t size, lf_log_t *log);
 void *lf_calloc(size_t size, lf_log_t *log);
