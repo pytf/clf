@@ -1,22 +1,17 @@
-/*
- * This file is part of the log file.
- * Copyright (C)
- * Licensed
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <pthread.h>
 
-#include "conf.h"
-
-int lf_log_init(const char *confpath)
+/*
+ * function : åˆå§‹åŒ–æ—¥å¿—
+*/
+int lf_log_init()
 {
     int ret;
 
     lf_iMaxSize = DEFAULT_LOG_SIZE;
-    //ÉèÖÃÈÕÖ¾Ä¬ÈÏ¼¶±ğºÍ¸öÊı
     lf_curLogLevel = LOG_LEVEL_INFO;
     lf_iLogCount = DEFAULT_LOG_COUNT;
     
@@ -29,6 +24,10 @@ int lf_log_init(const char *confpath)
     return RET_OK;
 }
 
+/*
+ * function : 
+ * input : level
+*/
 static inline const char* lf_log_label(int level)
 {
     switch(level)
@@ -52,42 +51,48 @@ static inline const char* lf_log_label(int level)
     }
 }
 
-void ReadLevelAndCount()
+/*
+ * function : è¯»å–é…ç½®ä¸­æ—¥å¿—çº§åˆ«å’Œè®¡æ•°
+*/
+void readLevelAndCount()
 {
-    u32 iLogLevel = 0;
-    u32 iLogCount = 0;
+    unint iLogLevel = 0;
+    unint iLogCount = 0;
     dictionary*   ini;
-    u32    retIni = -1;
+    unint    retIni = -1;
 
     ini = iniparser_load(ini_name);
     if (ini==NULL) {
         fprintf(stderr, "cannot parse file: %s\n", ini_name);
-        return -1 ;
+        return ;
     }
     iniparser_dump(ini, stderr);
     
     retIni = iniparser_getint(ini, "lf_curLogLevel", -1);
-    if (-1 == retIni) {
+    if (RET_ERR== retIni) {
         fprintf(stderr, "cannot parse file: %d\n", retIni);
-        return -1 ;
+        return ;
     }
     lf_curLogLevel = retIni;
 
     retIni = iniparser_getint(ini, "lf_iLogCount", -1);
-    if (-1 == retIni) {
+    if (RET_ERR== retIni) {
         fprintf(stderr, "cannot parse file: %d\n", retIni);
-        return -1 ;
+        return ;
     }
     lf_iLogCount = retIni;
     
     iniparser_freedict(ini);
 }
 
-FILE* OpenLogFile()
+/*
+ * function : æ‰“å¼€æ—¥å¿—æ–‡ä»¶
+*/
+FILE* openLogFile()
 {
-    s16 strLogFilePath;
+    short strLogFilePath;
     FILE* pFile = NULL;
-    u32 fd;
+    unint fd;
     struct stat st;
     int ret = RET_ERR;
 
@@ -105,7 +110,7 @@ FILE* OpenLogFile()
     {
         (void)fstat(fd, &st);
         close(fd);
-        //ÈÕÖ¾³¬¹ı´óĞ¡ÇĞ»»ÈÕÖ¾
+        //æ—¥å¿—è¶…è¿‡å¤§å°åˆ‡æ¢æ—¥å¿—
         if (st.st_size >= lf_iMaxSize)
         {
             ret = SwitchLogFile(lf_strFilePath.c_str(), lf_strFileName.c_str(), lf_iLogCount);
@@ -125,40 +130,50 @@ FILE* OpenLogFile()
     return pFile;
 }
 
-s32 CreateLogFile(const u16* pszLogFile)
+/*
+ * function : åˆ›å»ºæ—¥å¿—æ–‡ä»¶
+ * input : pszLogFile ---æ—¥å¿—æ–‡ä»¶å
+*/
+int createLogFile(const unshort* pszLogFile)
 {
-    u32 fd = 0;
+    unint fd = 0;
     fd = open(pszLogFile, O_CREAT, S_IRUSR | S_IWUSR);
     if (-1 == fd)
     {
         return RET_ERR;
     }
     close(fd);
-    // ÉèÖÃÈ¨ÏŞ
+    // è®¾ç½®æƒé™
     (void)chmod(pszLogFile, S_IRUSR | S_IWUSR);
 
     return RET_OK;
 }
 
-s32 SwitchLogFile(const mp_char* pszLogPath, const mp_char* pszLogName, mp_int32 iLogCount)
+/*
+ * function : é€‰æ‹©æ—¥å¿—æ–‡ä»¶
+ * input : pszLogPath ---logå­˜æ”¾è·¯å¾„
+ *         pszLogName ---logå
+ *         iLogCount ---logè®¡æ•°è¡Œ
+*/
+int switchLogFile(const char* pszLogPath, const char* pszLogName, int iLogCount)
 {
     int ret = RET_ERR;
-    u16 acDestFile[MAX_FULL_PATH_LEN] = {0};
-    u16 acBackFile[MAX_FULL_PATH_LEN] = {0};
-    u16* strSuffix = "zip";
-    u16* strCommand;
-    u16 strLogFile[MAX_FILE_NAME_LEN] ={0};
-    s32 i = iLogCount;
+    unshort acDestFile[MAX_FULL_PATH_LEN] = {0};
+    unshort acBackFile[MAX_FULL_PATH_LEN] = {0};
+    unshort* strSuffix = "zip";
+    unshort* strCommand;
+    unshort strLogFile[65536] ={0};
+    int i = iLogCount;
 
     strSuffix = "gz";
-    ret = snprintf_s(strLogFile, MAX_FILE_NAME_LEN, MAX_FILE_NAME_LEN - 1, \
+    ret = snprintf_s(strLogFile, 65536, 65536 - 1, \
         "%s%s%s", pszLogPath, PATH_SEPARATOR, pszLogName);
     if (RET_ERR== ret)
     {
         return ret;
     }
 
-    //É¾³ıÊ±¼ä×î¾ÃµÄÒ»¸ö±¸·İÈÕÖ¾ÎÄ¼ş
+    //åˆ é™¤æ—¶é—´æœ€ä¹…çš„ä¸€ä¸ªå¤‡ä»½æ—¥å¿—æ–‡ä»¶
     ret = snprintf_s(acBackFile, MAX_FULL_PATH_LEN, MAX_FULL_PATH_LEN - 1, \
         "%s%s%s.%d.%s", pszLogPath, PATH_SEPARATOR, pszLogName, i, strSuffix);
     if (RET_ERR== ret)
@@ -168,11 +183,11 @@ s32 SwitchLogFile(const mp_char* pszLogPath, const mp_char* pszLogName, mp_int32
 
     (void)remove(acBackFile);
 
-    //Ò»¸öÒ»¸ö¸ü¸ÄÈÕÖ¾ÎÄ¼şÃû³Æ
+    //ä¸€ä¸ªä¸€ä¸ªæ›´æ”¹æ—¥å¿—æ–‡ä»¶åç§°
     i--;
     for (; i >= 0; i--)
     {
-        //µÚÒ»¸öÎÄ¼şÃûÖĞ²»°üÀ¨0
+        //ç¬¬ä¸€ä¸ªæ–‡ä»¶åä¸­ä¸åŒ…æ‹¬0
         if (0 == i)
         {
             ret = snprintf_s(acBackFile, MAX_FULL_PATH_LEN, MAX_FULL_PATH_LEN - 1, "%s%s%s.%s", \
@@ -191,9 +206,9 @@ s32 SwitchLogFile(const mp_char* pszLogPath, const mp_char* pszLogName, mp_int32
 
         if (0 == i)
         {            
-            //Ñ¹ËõÎÄ¼ş±¸·İÎÄ¼ş
+            //å‹ç¼©æ–‡ä»¶å¤‡ä»½æ–‡ä»¶
             ret = snprintf_s(strCommand, MAX_FULL_PATH_LEN, MAX_FULL_PATH_LEN - 1, "gzip -f -q -9 \"%s\"", strLogFile);
-            if (CheckCmdDelimiter(strCommand) == MP_FALSE)
+            if (CheckCmdDelimiter(strCommand) == RET_ERR)
             {
                 return RET_ERR;
             }
@@ -201,7 +216,7 @@ s32 SwitchLogFile(const mp_char* pszLogPath, const mp_char* pszLogName, mp_int32
             ret = system(strCommand);
             if(!WIFEXITED(ret))
             {
-                //systemÒì³£·µ»Ø
+                //systemå¼‚å¸¸è¿”å›
                 return RET_ERR;
             }
         }
@@ -226,83 +241,98 @@ s32 SwitchLogFile(const mp_char* pszLogPath, const mp_char* pszLogName, mp_int32
     return ret;
 }
 
-void lf_log(const int level, const char *file, size_t filelen, const char *func, size_t funclen,
-    long line, const char *format, ...)
+/*
+ * function : åˆ¶ä½œæ¶ˆæ¯å¤´
+ * input : iLevel ---æ—¥å¿—çº§åˆ«
+ *         iBufLen ---bufé•¿åº¦
+ * output : headBuf ---æ¶ˆæ¯å¤´
+*/
+int mkHead(int iLevel, char* headBuf, int iBufLen)
+{
+    int ret = RET_OK;
+
+    const char* strHead = lf_log_label(iLevel);
+    if ("unkown"== strHead)
+    {
+        return RET_ERR;
+    }
+    
+    ret= snprintf_s(headBuf, iBufLen, iBufLen - 1, "%s", strHead);
+    if (RET_ERR== ret)
+    {
+        return RET_ERR;
+    }
+    return ret;
+}
+
+/*
+ * function : æ—¥å¿—æ‰“å°
+ * input : level ---æ—¥å¿—çº§åˆ«
+ *         file ---æ–‡ä»¶å
+ *         func ---å‡½æ•°å
+ *         line ---è¡Œå·
+ *         format ---è¾“å‡ºæ ¼å¼
+ *         ... ---è¾“å‡ºå‚æ•°
+*/
+void lf_log(const int level, const char *file, const char *func, long line, const char *format, ...)
 {
     va_list args;
     int ret = RET_ERR;
+    FILE* pFile = NULL;
+    char curTime[80] = {0};
+    char logMsg[65536]= {0};
+    char strMsgHead[10] = {0};
+    char strMsg[65546] = {0};
 
+    ReadLevelAndCount();
     if (level < lf_curLogLevel)
     {
         return;
     }
 
-    pthread_rwlock_rdlock(&lf_log_env_lock);
-
-    if (!lf_log_env_is_init) {
-        zc_error("never call lf_log_init() or dlf_log_init() before");
-        goto exit;
-    }
-
     va_start(args, format);
-    CMpTime::Now(&tLongTime);
-    pstCurTime = CMpTime::LocalTimeR(&tLongTime, &stCurTime);
-    if (NULL == pstCurTime)
+    
+    timeString(curTime);
+    if (NULL == curTime)
     {
         va_end(args);
         return;
     }
 
-    iRet = vsnprintf_s(acMsg, sizeof(acMsg),sizeof(acMsg) - 1, format, pszArgp); //lint !e530
-    if (MP_FAILED == iRet)
+    pthread_rwlock_rdlock(&lf_log_env_lock);
+    ret = snprintf_s(logMsg, sizeof(logMsg),sizeof(logMsg) - 1, format, args);
+    if (RET_ERR == ret)
     {
         va_end(args);
+        pthread_rwlock_unlock(&lf_log_env_lock);
         return;
     }
 
-    iRet = MkHead(iLevel, acMsgHead, sizeof(acMsgHead));
-    if (MP_SUCCESS != iRet)
+    ret = mkHead(level, strMsgHead, sizeof(strMsgHead));
+    if (RET_OK!= ret)
     {
         va_end(args);
+        pthread_rwlock_unlock(&lf_log_env_lock);
         return;
     }
 
-    strMsg <<"[" 
-       <<std::setfill('0') 
-       <<std::setw(4) <<(pstCurTime->tm_year + 1900) <<"-"
-       <<std::setw(2) <<(pstCurTime->tm_mon + 1) <<"-" 
-       <<std::setw(2) <<pstCurTime->tm_mday <<" "
-       <<std::setw(2) <<pstCurTime->tm_hour <<":" 
-       <<std::setw(2) <<pstCurTime->tm_min <<":" 
-       <<std::setw(2) <<pstCurTime->tm_sec <<"][0x" 
-       <<std::setw(16) <<std::hex <<ulCode <<"][";
+    snprintf_s(strMsg, sizeof(strMsg),sizeof(strMsg) - 1, "%s ", curTime, getpid(), lf_thread_tid(), file, line, logMsg);
 
-    if (MP_SUCCESS == GetCurrentUserName(strUserName, iErrCode))
-    {
-        strMsg <<std::dec <<getpid() <<"][" <<CMpThread::GetThreadId() <<"][" <<strUserName;
-    }
-    else
-    {
-        strMsg <<std::dec <<getpid() <<"][" <<CMpThread::GetThreadId() <<"][u:" <<std::dec <<getuid() <<"e:" <<std::dec <<iErrCode;
-    }
-
-    strMsg <<"][" <<acMsgHead <<"][" <<BaseFileName(pszFileName) <<"," <<iFileLine <<"]" <<acMsg <<std::endl;
-
-    pFile = OpenLogFile();
+    pFile = openLogFile();
     if (NULL == pFile)
     {
         va_end(args);
+        pthread_rwlock_unlock(&lf_log_env_lock);
         return;
     }
     
-    fprintf(pFile, "%s", strMsg.str().c_str());
+    fprintf(pFile, "%s", strMsg);
     fflush(pFile);
     fclose(pFile);
+    pthread_rwlock_unlock(&lf_log_env_lock);
 
     va_end(args);
 
-exit:
-    pthread_rwlock_unlock(&lf_log_env_lock);
     return;
 }
 
