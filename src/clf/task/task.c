@@ -1,9 +1,10 @@
-#include "clf_config.h"
+#include "task.h"
 
-int _ModInitConf()
+int _ModInitTask()
 {
     int ret = RET_OK;
 
     return ret;
 }
+
 

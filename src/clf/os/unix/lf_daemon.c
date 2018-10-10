@@ -13,15 +13,14 @@
 #include <lf_core.h>
 
 
-lf_int_t
-lf_daemon(lf_log_t *log)
+int lf_daemon()
 {
     int  fd;
 
     switch (fork()) {
     case -1:
-        lf_log_error(lf_LOG_EMERG, log, lf_errno, "fork() failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "fork() failed");
+        return RET_ERR;
     //子进程
     case 0:
         break;
@@ -31,43 +30,43 @@ lf_daemon(lf_log_t *log)
     }
     //setsid创建新会话，脱离控制终端和进程组
     if (setsid() == -1) {
-        lf_log_error(lf_LOG_EMERG, log, lf_errno, "setsid() failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "setsid() failed");
+        return RET_ERR;
     }
     //设置进程的文件权限掩码为0
     umask(0);
     
     fd = open("/dev/null", O_RDWR);
     if (fd == -1) {
-        lf_log_error(lf_LOG_EMERG, log, lf_errno,
-                      "open(\"/dev/null\") failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "open(\"/dev/null\") failed");
+        return RET_ERR;
     }
     //重定向标准输入到/dev/null
     if (dup2(fd, STDIN_FILENO) == -1) {
-        lf_log_error(lf_LOG_EMERG, log, lf_errno, "dup2(STDIN) failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "dup2(STDIN) failed");
+        return RET_ERR;
     }
     //重定向标准输出到/dev/null
     if (dup2(fd, STDOUT_FILENO) == -1) {
-        lf_log_error(lf_LOG_EMERG, log, lf_errno, "dup2(STDOUT) failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "dup2(STDOUT) failed");
+        return RET_ERR;
     }
 
 #if 0
     //重定向标准出错到/dev/null
     if (dup2(fd, STDERR_FILENO) == -1) {
-        lf_log_error(lf_LOG_EMERG, log, lf_errno, "dup2(STDERR) failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "dup2(STDERR) failed");
+        return RET_ERR;
     }
 #endif
 
     if (fd > STDERR_FILENO) {
         if (close(fd) == -1) {
-            lf_log_error(lf_LOG_EMERG, log, lf_errno, "close() failed");
-            return lf_ERROR;
+            lf_log_std(LOG_LEVEL_ERR, "close() failed");
+            return RET_ERR;
         }
     }
 
-    return lf_OK;
+    return RET_OK;
 }
+

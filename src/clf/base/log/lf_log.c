@@ -336,3 +336,11 @@ void lf_log(const int level, const char *file, const char *func, long line, cons
     return;
 }
 
+int _ModInitLog()
+{
+    int ret = RET_OK;
+
+    return ret;
+}
+
+

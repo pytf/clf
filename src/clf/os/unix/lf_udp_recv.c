@@ -1,10 +1,3 @@
-
-/*
- * Copyright (C) Igor Sysoev
- * Copyright (C) Nginx, Inc.
- */
-
-
 #include <lf_config.h>
 #include <lf_core.h>
 #include <lf_event.h>

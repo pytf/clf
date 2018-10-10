@@ -1,9 +1,3 @@
-
-/*
- * Copyright (C) Igor Sysoev
- * Copyright (C) Nginx, Inc.
- */
-
 #include <lf_config.h>
 #include <lf_core.h>
 
@@ -74,80 +68,71 @@
  */
 
 
-lf_int_t
-lf_thread_mutex_create(lf_thread_mutex_t *mtx, lf_log_t *log)
+int lf_thread_mutex_create(pthread_mutex_t *mtx)
 {
-    lf_err_t            err;
+    int            err;
     pthread_mutexattr_t  attr;
 
     err = pthread_mutexattr_init(&attr);
     if (err != 0) {
-        lf_log_error(lf_LOG_EMERG, log, err,
-                      "pthread_mutexattr_init() failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "pthread_mutexattr_init() failed");
+        return RET_ERR;
     }
 
     err = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
     if (err != 0) {
-        lf_log_error(lf_LOG_EMERG, log, err,
-                      "pthread_mutexattr_settype"
+        lf_log_std(LOG_LEVEL_ERR, "pthread_mutexattr_settype"
                       "(PTHREAD_MUTEX_ERRORCHECK) failed");
-        return lf_ERROR;
+        return RET_ERR;
     }
 
     err = pthread_mutex_init(mtx, &attr);
     if (err != 0) {
-        lf_log_error(lf_LOG_EMERG, log, err,
-                      "pthread_mutex_init() failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "pthread_mutex_init() failed");
+        return RET_ERR;
     }
 
     err = pthread_mutexattr_destroy(&attr);
     if (err != 0) {
-        lf_log_error(lf_LOG_ALERT, log, err,
-                      "pthread_mutexattr_destroy() failed");
+        lf_log_std(LOG_LEVEL_ERR, "pthread_mutexattr_destroy() failed");
     }
 
-    return lf_OK;
+    return RET_OK;
 }
 
 
-lf_int_t
-lf_thread_mutex_destroy(lf_thread_mutex_t *mtx, lf_log_t *log)
+int lf_thread_mutex_destroy(pthread_mutex_t *mtx)
 {
-    lf_err_t  err;
+    int  err;
 
     err = pthread_mutex_destroy(mtx);
     if (err != 0) {
-        lf_log_error(lf_LOG_ALERT, log, err,
-                      "pthread_mutex_destroy() failed");
-        return lf_ERROR;
+        lf_log_std(LOG_LEVEL_ERR, "pthread_mutex_destroy() failed");
+        return RET_ERR;
     }
 
-    return lf_OK;
+    return RET_OK;
 }
 
 
-lf_int_t
-lf_thread_mutex_lock(lf_thread_mutex_t *mtx, lf_log_t *log)
+int lf_thread_mutex_lock(pthread_mutex_t *mtx)
 {
-    lf_err_t  err;
+    int  err;
 
     err = pthread_mutex_lock(mtx);
     if (err == 0) {
-        return lf_OK;
+        return RET_OK;
     }
 
-    lf_log_error(lf_LOG_ALERT, log, err, "pthread_mutex_lock() failed");
+    lf_log_std(LOG_LEVEL_ERR, "pthread_mutex_lock() failed");
 
-    return lf_ERROR;
+    return RET_ERR;
 }
 
 
-lf_int_t
-lf_thread_mutex_unlock(lf_thread_mutex_t *mtx, lf_log_t *log)
+int lf_thread_mutex_unlock(pthread_mutex_t *mtx)
 {
-    lf_err_t  err;
+    int  err;
 
     err = pthread_mutex_unlock(mtx);
 
@@ -156,10 +141,11 @@ lf_thread_mutex_unlock(lf_thread_mutex_t *mtx, lf_log_t *log)
 #endif
 
     if (err == 0) {
-        return lf_OK;
+        return RET_OK;
     }
 
-    lf_log_error(lf_LOG_ALERT, log, err, "pthread_mutex_unlock() failed");
+    lf_log_std(LOG_LEVEL_ERR, "pthread_mutex_unlock() failed");
 
-    return lf_ERROR;
+    return RET_ERR;
 }
+
