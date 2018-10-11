@@ -1,64 +1,47 @@
 #include "lf_main.h"
 
+static void showHelpInfo();
+static int coreModInit();
+static int coreModInit();
+static int get_options(int argc, char *const *argv);
+
+static unint       g_show_help;
+static unint       g_show_version;
+static unint       g_show_configure;
+
+static unint       g_callBackCounter[MOD_ID_BUIT];
+
 static MOD_TABLE_S g_modTable[] =
 {
-        {MOD_ID_LOG, "logModule", _ModInitLog},
-        {MOD_ID_CONF, "confModule", _ModInitConf},
-        {MOD_ID_TASK, "taskModule", _ModInitTask}
+    {MOD_ID_LOG, "logModule", _ModInitLog},
+    {MOD_ID_CONF, "confModule", _ModInitConf},
+    {MOD_ID_TASK, "taskModule", _ModInitTask},
 };
 
-void showHelpInfo()
+static MODULE_CB_TABLE_S g_modCbTable[] =
 {
-    char buf[] = 
-        "Usage: nginx [-?hvVtTq] [-s signal] [-c filename] "
-                             "[-p prefix] [-g directives]" LINEFEED
-                             LINEFEED
-                "Options:" LINEFEED
-                "  -?,-h         : this help" LINEFEED
-                "  -v            : show version and exit" LINEFEED
-                "  -V            : show version and configure options then exit" //³ıÁËversionÍâ»¹¿ÉÒÔÏÔÊ¾²Ù×÷ÏµÍ³ºÍconfigure½×¶ÎµÈÏà¹ØĞÅÏ¢
-                LINEFEED LINEFEED;
-    write(STDERR_FILENO, buf, strlen(buf));
-}
+    {MOD_ID_TASK,     "task",     60,  _TASK_Shedule},          /* æ¶ˆæ¯æ¨¡å—çš„å‘¨æœŸæ ¸æŸ¥å‡½æ•° */
+    {MOD_ID_MSG,     "msg",     60,  _MSG_Trig},                /* æ‰“å°æ¶ˆæ¯ç®¡ç†æ¨¡å—çš„ç»Ÿè®¡å€¼ */
+};
 
-int coreModInit()
-{
-    int i;
-    char *pName;
-    int num = sizeof(g_modTable)/sizeof(MOD_TABLE_S);
-
-    for(i = 0; i < num; i++)
-    {
-        pName = g_modTable[i].mod_name;
-
-        if(NULL != g_modTable[i].pFunc)
-        {
-            if(RET_OK != g_modTable[i].pFunc())
-            {
-                lf_log_std(LOG_LEVEL_ERR, "Init module [%s] failed.", pName);
-                return RET_ERR;
-            }
-        }
-
-        lf_log_std(LOG_LEVEL_DEBUG, "Init module [%s] success.", pName);
-    }
-
-    return RET_OK;
-}
-
-//1.Ê±¼äµÈ³õÊ¼»¯
-//2.¶ÁÈëÃüÁîĞĞ²ÎÊı
-//3.ÉèÖÃÎªºóÌ¨½ø³Ì
-//4.¶ÁÈë²¢½âÎöÅäÖÃ
-//5.ºËĞÄÄ£¿é³õÊ¼»¯
-//6.ËùÓĞÄ£¿é³õÊ¼»¯
-int main(int argc, char *argv[])
+//1.æ—¶é—´ç­‰åˆå§‹åŒ–
+//2.è¯»å…¥å‘½ä»¤è¡Œå‚æ•°
+//3.è®¾ç½®ä¸ºåå°è¿›ç¨‹
+//4.è¯»å…¥å¹¶è§£æé…ç½®
+//5.æ ¸å¿ƒæ¨¡å—åˆå§‹åŒ–
+//6.æ‰€æœ‰æ¨¡å—åˆå§‹åŒ–
+int main(int argc, char *const *argv)
 {
     int ret = RET_OK;
     char *pBuf = "set daemon failed.";
     
-    if (get_options(argc, argv) != RET_OK) { //½âÎöÃüÁî²ÎÊı
+    if (get_options(argc, argv) != RET_OK) { //è§£æå‘½ä»¤å‚æ•°
         return RET_ERR;
+    }
+
+    if(g_show_help)
+    {
+        showHelpInfo();
     }
 
     ret = lf_daemon();
@@ -67,9 +50,133 @@ int main(int argc, char *argv[])
         write(STDERR_FILENO, pBuf, strlen(pBuf));
     }
 
-    time_init(); //³õÊ¼»¯»·¾³µÄµ±Ç°Ê±¼ä
+    time_init(); //åˆå§‹åŒ–ç¯å¢ƒçš„å½“å‰æ—¶é—´
 
-    coreModInit();
+    ret = coreModInit();
+    if(RET_OK != ret)
+    {
+        lf_log_std(LOG_LEVEL_ERR, "Init modules failed.");
+        return RET_ERR;
+    }
+
+    /*åˆ›å»ºå‘¨æœŸæ€§ä»»åŠ¡æ‰§è¡Œ*/
+    //funcCallBack();
+
+    /*å¯åŠ¨è¿›ç¨‹ç›‘æ§*/
+    _ModInitMonitor();
+    BUG();
 
     return RET_OK;
 }
+
+static void showHelpInfo()
+{
+    char buf[] = 
+        "Usage: nginx [-?hvVtTq] [-s signal] [-c filename] "
+                             "[-p prefix] [-g directives]" LINEFEED
+                             LINEFEED
+                "Options:" LINEFEED
+                "  -?,-h         : this help" LINEFEED
+                "  -v            : show version and exit" LINEFEED
+                "  -V            : show version and configure options then exit" //é™¤äº†versionå¤–è¿˜å¯ä»¥æ˜¾ç¤ºæ“ä½œç³»ç»Ÿå’Œconfigureé˜¶æ®µç­‰ç›¸å…³ä¿¡æ¯
+                LINEFEED LINEFEED;
+    write(STDERR_FILENO, buf, strlen(buf));
+}
+
+static int coreModInit()
+{
+    int  i;
+    int num;
+    MOD_TABLE_S *ptModule;
+
+    for (i = 0; num; i++) {
+        ptModule = &(g_modTable[i]);
+        if (NULL != ptModule->pfunc)
+        {
+            if (RET_OK != ptModule->pfunc())
+            {
+                lf_log_std(LOG_LEVEL_ERR, "Module [%s] start failed", ptModule->acModName);
+                return RET_ERR;
+            }
+        }
+
+        lf_log_std(LOG_LEVEL_DEBUG, "Module [%s] start success", ptModule->acModName);
+    }
+
+    return RET_OK;
+}
+
+static int get_options(int argc, char *const *argv)
+{
+    unchar     *p;
+    int   i;
+
+    for (i = 1; i < argc; i++) {
+
+        p = (unchar *) argv[i];
+
+        if (*p++ != '-') {
+            lf_log_std(LOG_LEVEL_ERR, "invalid option: \"%s\"", argv[i]);
+            return RET_ERR;
+        }
+
+        while (*p) {
+
+            switch (*p++) {
+
+            case '?':
+            case 'h':
+                g_show_version = 1;
+                g_show_help = 1;
+                break;
+
+            case 'v':
+                g_show_version = 1;
+                break;
+
+            case 'V':
+                g_show_version = 1;
+                g_show_configure = 1;
+                break;
+
+            default:
+                lf_log_std(0, "invalid option: \"%c\"", *(p - 1));
+                return RET_ERR;
+            }
+        }
+    }
+
+    return RET_OK;
+}
+
+void funcCallBack()
+{
+    MODULE_CB_TABLE_S *pCb;
+    unint             num, i;
+
+    num = sizeof(g_modCbTable)/sizeof(MODULE_CB_TABLE_S);
+
+    for(;;)
+    {
+        for (i = 0; i < num; i++)
+        {
+            pCb = &g_modCbTable[i];
+
+            if (!pCb->pCBFunc || !pCb->time_out)
+            {
+                continue;
+            }
+
+            g_callBackCounter[i]++;
+            if (g_callBackCounter[i] == pCb->time_out)
+            {
+                g_callBackCounter[i] = 0;
+                pCb->pCBFunc();
+                sleep(1);               /* é˜²æ­¢äº§ç”ŸCPUå³°å€¼, 1ç§’åªè°ƒç”¨1ä¸ªå›è°ƒ */
+            }
+        }
+
+        sleep(1);
+    }
+}
+
