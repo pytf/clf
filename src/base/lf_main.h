@@ -3,7 +3,6 @@
 
 #define mod_name_len 20
 #define LINEFEED             "\x0a"
-/* ´¥·¢½ø³Ì±ÀÀ£, ²úÉúcoredump raiseÏò½ø³Ì±¾Éí·¢ËÍÐÅºÅ*/
 #define BUG()  \
     do { \
         raise(SIGILL); \

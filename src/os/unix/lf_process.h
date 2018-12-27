@@ -17,7 +17,7 @@ typedef pid_t       lf_pid_t;
 
 #define lf_INVALID_PID  -1
 
-typedef void (*lf_spawn_proc_pt) (lf_cycle_t *cycle, void *data);
+typedef void (*lf_spawn_proc_pt) ();
 
 typedef struct {
     lf_pid_t           pid;

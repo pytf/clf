@@ -1,7 +1,10 @@
+/*
+Ìá¹©ÈÕÖ¾¼ÇÂ¼¡¢ÅäÖÃ½âÎö¡¢ÊÂ¼şÇı¶¯¡¢½ø³Ì¹ÜÀí¡¢ÈÎÎñµ÷¶ÈµÈ
+*/
+
 #include "lf_main.h"
 
 static void showHelpInfo();
-static int coreModInit();
 static int coreModInit();
 static int get_options(int argc, char *const *argv);
 
@@ -13,29 +16,30 @@ static unint       g_callBackCounter[MOD_ID_BUIT];
 
 static MOD_TABLE_S g_modTable[] =
 {
-    {MOD_ID_LOG, "logModule", _ModInitLog},
     {MOD_ID_CONF, "confModule", _ModInitConf},
     {MOD_ID_TASK, "taskModule", _ModInitTask},
+    {MOD_ID_MSG, "msgModule", _ModInitMsg},
 };
 
 static MODULE_CB_TABLE_S g_modCbTable[] =
 {
-    {MOD_ID_TASK,     "task",     60,  _TASK_Shedule},          /* æ¶ˆæ¯æ¨¡å—çš„å‘¨æœŸæ ¸æŸ¥å‡½æ•° */
-    {MOD_ID_MSG,     "msg",     60,  _MSG_Trig},                /* æ‰“å°æ¶ˆæ¯ç®¡ç†æ¨¡å—çš„ç»Ÿè®¡å€¼ */
+    {MOD_ID_TASK,     "task",     60,  _TASK_Shedule},/* ÏûÏ¢Ä£¿éµÄÖÜÆÚºË²éº¯Êı */
+    {MOD_ID_MSG,     "msg",     60,  _MSG_Trig},
 };
 
-//1.æ—¶é—´ç­‰åˆå§‹åŒ–
-//2.è¯»å…¥å‘½ä»¤è¡Œå‚æ•°
-//3.è®¾ç½®ä¸ºåå°è¿›ç¨‹
-//4.è¯»å…¥å¹¶è§£æé…ç½®
-//5.æ ¸å¿ƒæ¨¡å—åˆå§‹åŒ–
-//6.æ‰€æœ‰æ¨¡å—åˆå§‹åŒ–
+//1.Ê±¼äµÈ³õÊ¼»¯
+//2.¶ÁÈëÃüÁîĞĞ²ÎÊı
+//3.ÉèÖÃÎªºóÌ¨½ø³Ì
+//4.¶ÁÈë²¢½âÎöÅäÖÃ
+//5.ºËĞÄÄ£¿é³õÊ¼»¯
+//6.ËùÓĞÄ£¿é³õÊ¼»¯
 int main(int argc, char *const *argv)
 {
     int ret = RET_OK;
     char *pBuf = "set daemon failed.";
     
-    if (get_options(argc, argv) != RET_OK) { //è§£æå‘½ä»¤å‚æ•°
+    if (get_options(argc, argv) != RET_OK)
+    {
         return RET_ERR;
     }
 
@@ -44,13 +48,19 @@ int main(int argc, char *const *argv)
         showHelpInfo();
     }
 
+    ret = lf_log_init();
+    if(RET_OK != ret)
+    {
+        return RET_ERR;
+    }
+
     ret = lf_daemon();
     if(RET_OK != ret)
     {
         write(STDERR_FILENO, pBuf, strlen(pBuf));
     }
 
-    time_init(); //åˆå§‹åŒ–ç¯å¢ƒçš„å½“å‰æ—¶é—´
+    time_init();
 
     ret = coreModInit();
     if(RET_OK != ret)
@@ -59,10 +69,8 @@ int main(int argc, char *const *argv)
         return RET_ERR;
     }
 
-    /*åˆ›å»ºå‘¨æœŸæ€§ä»»åŠ¡æ‰§è¡Œ*/
     //funcCallBack();
 
-    /*å¯åŠ¨è¿›ç¨‹ç›‘æ§*/
     _ModInitMonitor();
     BUG();
 
@@ -109,14 +117,17 @@ static int coreModInit()
 static int get_options(int argc, char *const *argv)
 {
     unchar     *p;
-    int   i;
+    int   i = 0;
+    char pBuf[1024] = {0};
 
     for (i = 1; i < argc; i++) {
 
         p = (unchar *) argv[i];
 
         if (*p++ != '-') {
-            lf_log_std(LOG_LEVEL_ERR, "invalid option: \"%s\"", argv[i]);
+            memset(pBuf, 0, sizeof(pBuf));
+            snprintf_s(pBuf, sizeof(pBuf), sizeof(pBuf) - 1, "invalid option: \"%s\"", argv[i]);
+            write(STDERR_FILENO, pBuf, strlen(pBuf));
             return RET_ERR;
         }
 
@@ -140,7 +151,9 @@ static int get_options(int argc, char *const *argv)
                 break;
 
             default:
-                lf_log_std(0, "invalid option: \"%c\"", *(p - 1));
+                memset(pBuf, 0, sizeof(pBuf));
+                snprintf_s(pBuf, sizeof(pBuf), sizeof(pBuf) - 1, "invalid option: \"%c\"", *(p - 1));
+                write(STDERR_FILENO, pBuf, strlen(pBuf));
                 return RET_ERR;
             }
         }
@@ -172,7 +185,7 @@ void funcCallBack()
             {
                 g_callBackCounter[i] = 0;
                 pCb->pCBFunc();
-                sleep(1);               /* é˜²æ­¢äº§ç”ŸCPUå³°å€¼, 1ç§’åªè°ƒç”¨1ä¸ªå›è°ƒ */
+                sleep(1);
             }
         }
 

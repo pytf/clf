@@ -33,6 +33,29 @@ lf_signal_t  signals[] = {
     { SIGPIPE,      "SIGPIPE, SIG_IGN", "",          NULL },
     { 0,            NULL,               "",          NULL }
 };
+
+int lf_spawn_process(lf_spawn_proc_pt proc, char *name)
+{
+    pid_t pid;
+    pid = fork();
+
+    switch (pid) {
+
+    case -1:
+        lf_log_std(LOG_LEVEL_ERR, "fork() failed while spawning \"%s\"", name);
+        return -1;
+
+    case 0:
+        proc();
+        break;
+
+    default:
+        break;
+    }
+
+    return pid;
+}
+
 /*
  *function : Initial signal handler, add signals[]
 */

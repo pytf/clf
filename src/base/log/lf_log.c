@@ -5,7 +5,7 @@
 #include <pthread.h>
 
 /*
- * function : 初始化日志
+ * function : log module init
 */
 int lf_log_init()
 {
@@ -25,7 +25,7 @@ int lf_log_init()
 }
 
 /*
- * function : 
+ * function : get the log label by log level
  * input : level
 */
 static inline const char* lf_log_label(int level)
@@ -52,7 +52,7 @@ static inline const char* lf_log_label(int level)
 }
 
 /*
- * function : 读取配置中日志级别和计数
+ * function : read log level and max logs
 */
 void readLevelAndCount()
 {
@@ -86,7 +86,7 @@ void readLevelAndCount()
 }
 
 /*
- * function : 打开日志文件
+ * function : open the log file
 */
 FILE* openLogFile()
 {
@@ -131,7 +131,7 @@ FILE* openLogFile()
 }
 
 /*
- * function : 创建日志文件
+ * function : create the log file
  * input : pszLogFile ---日志文件名
 */
 int createLogFile(const unshort* pszLogFile)
@@ -150,7 +150,7 @@ int createLogFile(const unshort* pszLogFile)
 }
 
 /*
- * function : 选择日志文件
+ * function : switch the log file
  * input : pszLogPath ---log存放路径
  *         pszLogName ---log名
  *         iLogCount ---log计数行
@@ -242,7 +242,7 @@ int switchLogFile(const char* pszLogPath, const char* pszLogName, int iLogCount)
 }
 
 /*
- * function : 制作消息头
+ * function : make log head for log
  * input : iLevel ---日志级别
  *         iBufLen ---buf长度
  * output : headBuf ---消息头
@@ -266,7 +266,7 @@ int mkHead(int iLevel, char* headBuf, int iBufLen)
 }
 
 /*
- * function : 日志打印
+ * function : interface of the log module
  * input : level ---日志级别
  *         file ---文件名
  *         func ---函数名
@@ -339,6 +339,8 @@ void lf_log(const int level, const char *file, const char *func, long line, cons
 int _ModInitLog()
 {
     int ret = RET_OK;
+
+    ret = lf_log_init();
 
     return ret;
 }
